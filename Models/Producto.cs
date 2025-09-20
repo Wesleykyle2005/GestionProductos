@@ -16,4 +16,5 @@ public class Producto
     public bool Estado { get; set; } = true;
     [StringLength(100, MinimumLength = 3, ErrorMessage = "El nombre del producto debe estar entre 3 y 100 caracteres")]
     public string? NombreProveedor { get; set; }
+    public virtual ICollection<Opcion> Opciones { get; set; } = new List<Opcion>();
 }

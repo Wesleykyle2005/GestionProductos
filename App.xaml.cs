@@ -25,6 +25,8 @@ public partial class App : Application
         services.AddSingleton<IDbContextFactory, DbContextFactory>();
         services.AddTransient<IUserService, UserService>();
         services.AddTransient<AuthViewModel>();
+        services.AddTransient<IProductService, ProductService>();
+        services.AddTransient<ProductViewModel>();
 
         var provider = services.BuildServiceProvider();
         Ioc.Default.ConfigureServices(services.BuildServiceProvider());

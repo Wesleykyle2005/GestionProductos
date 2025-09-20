@@ -4,7 +4,7 @@ namespace GestionProductos.Services
 {
     public interface IUserService
     {
-        Usuario? Login(string correo, string password);
+        Task<Usuario?> LoginAsync(string correo, string password);
         Usuario Register(string nombreUsuario, string? apellido, string correo, string telefono, string password);
         bool IsEmailTaken(string correo);
         bool IsUsernameTaken(string nombreUsuario);

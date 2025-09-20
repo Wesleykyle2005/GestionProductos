@@ -1,5 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
+using GestionProductos.Common;
 using GestionProductos.Models;
 using GestionProductos.Services;
 using Microsoft.Extensions.Logging;
@@ -15,7 +17,7 @@ public class AuthViewModel : ObservableObject
         _userService = userService;
         _logger = logger;
 
-        LoginCommand = new RelayCommand<string>(DoLogin);
+        LoginCommand = new AsyncRelayCommand<string>(DoLoginAsync);
         RegisterCommand = new RelayCommand<string>(DoRegister);
         ToggleModeCommand = new RelayCommand(() => IsLoginMode = !IsLoginMode);
     }
@@ -40,7 +42,7 @@ public class AuthViewModel : ObservableObject
     public Usuario? CurrentUser { get => _currentUser; set => SetProperty(ref _currentUser, value); }
     private Usuario? _currentUser;
 
-    public IRelayCommand<string> LoginCommand { get; }
+    public IAsyncRelayCommand<string> LoginCommand { get; }
     public IRelayCommand<string> RegisterCommand { get; }
     public IRelayCommand ToggleModeCommand { get; }
 
@@ -69,20 +71,29 @@ public class AuthViewModel : ObservableObject
             Error = "No se pudo completar el registro. Inténtalo más tarde.";
         }
     }
-    private void DoLogin(string password)
+    private async Task DoLoginAsync(string? password)
     {
+        if (string.IsNullOrWhiteSpace(Correo) || string.IsNullOrWhiteSpace(password))
+        {
+            Error = "El correo y la contraseña son obligatorios.";
+            return;
+        }
+
         Error = null;
+
         try
         {
-            var user = _userService.Login(Correo, password);
+            var user = await _userService.LoginAsync(Correo, password);
             if (user == null)
             {
                 Error = "Credenciales inválidas.";
                 return;
             }
             CurrentUser = user;
+
+            WeakReferenceMessenger.Default.Send(new LoginSuccessMessage(true));
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             _logger.LogError(ex, "Error en login");
             Error = "No se pudo iniciar sesión. Inténtalo más tarde.";

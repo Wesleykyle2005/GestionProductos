@@ -1,6 +1,7 @@
 ﻿using GestionProductos.Models;
 using Microsoft.Extensions.Logging;
 using System.ComponentModel.DataAnnotations;
+using System.Data.Entity;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -109,20 +110,23 @@ public class UserService : IUserService
         }
     }
 
-    public Usuario? Login(string correo, string password)
+    public async Task<Usuario?> LoginAsync(string correo, string password)
     {
         try
         {
             using var ctx = _dbContextFactory.Create();
-            var usuario = ctx.Usuarios.FirstOrDefault(u => u.Correo == correo);
+            var usuario = await ctx.Usuarios.FirstOrDefaultAsync(u => u.Correo == correo);
             if (usuario == null)
             {
                 _logger.LogInformation("Intento de login con correo inexistente: {Correo}", correo);
                 return null;
             }
 
-            var hashString = Encoding.UTF8.GetString(usuario.ContrasenaHash);
-            var ok = BCrypt.Net.BCrypt.Verify(password, hashString);
+            bool ok = await Task.Run(() =>
+            {
+                var hashString = Encoding.UTF8.GetString(usuario.ContrasenaHash);
+                return BCrypt.Net.BCrypt.Verify(password, hashString);
+            });
 
             if (!ok)
             {
