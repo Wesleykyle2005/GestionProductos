@@ -40,6 +40,7 @@ public class ProductService : IProductService
             using var context = _dbContextFactory.Create();
             var query = context.Productos
                                .Include(p => p.Opciones)
+                               .AsNoTracking()
                                .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(productName))

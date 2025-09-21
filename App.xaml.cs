@@ -27,6 +27,8 @@ public partial class App : Application
         services.AddTransient<AuthViewModel>();
         services.AddTransient<IProductService, ProductService>();
         services.AddTransient<ProductViewModel>();
+        services.AddTransient<IOptionService, OptionService>();
+
 
         var provider = services.BuildServiceProvider();
         Ioc.Default.ConfigureServices(services.BuildServiceProvider());

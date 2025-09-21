@@ -69,7 +69,6 @@ public class UserService : IUserService
         var telefonoNormalizado = telefono.Replace("-", "");
 
         var hashString = BCrypt.Net.BCrypt.HashPassword(password);
-        var hashBytes = Encoding.UTF8.GetBytes(hashString);
 
         var usuario = new Usuario
         {
@@ -77,7 +76,7 @@ public class UserService : IUserService
             Apellido = string.IsNullOrWhiteSpace(apellido) ? null : apellido,
             Correo = correo,
             Telefono = telefonoNormalizado,
-            ContrasenaHash = hashBytes,
+            ContrasenaHash = hashString,
             FechaCreacion = DateTime.Now
         };
 
@@ -124,8 +123,7 @@ public class UserService : IUserService
 
             bool ok = await Task.Run(() =>
             {
-                var hashString = Encoding.UTF8.GetString(usuario.ContrasenaHash);
-                return BCrypt.Net.BCrypt.Verify(password, hashString);
+                return BCrypt.Net.BCrypt.Verify(password, usuario.ContrasenaHash);
             });
 
             if (!ok)

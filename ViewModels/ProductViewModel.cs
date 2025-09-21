@@ -1,26 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GestionProductos.Models;
 using GestionProductos.Services;
 using Microsoft.Extensions.Logging;
+using System.Collections.ObjectModel;
 
 namespace GestionProductos.ViewModels;
 
 public class ProductViewModel : ObservableObject
 {
     private readonly IProductService _productService;
+    private readonly IOptionService _optionService;
     private readonly ILogger<ProductViewModel> _logger;
     private CancellationTokenSource? _reloadCts;
 
-    public ProductViewModel(IProductService productService, ILogger<ProductViewModel> logger)
+    public ProductViewModel(IProductService productService, IOptionService optionService, ILogger<ProductViewModel> logger)
     {
         _productService = productService;
+        _optionService = optionService;
         _logger = logger;
 
         StatusList = new[]
@@ -35,6 +32,12 @@ public class ProductViewModel : ObservableObject
         ClearFiltersCommand = new RelayCommand(ClearFilters);
         ShowDetailsCommand = new RelayCommand<Producto>(ShowProductDetails);
         HideDetailsCommand = new RelayCommand(HideProductDetails);
+
+        AddNewOptionCommand = new RelayCommand(PrepareForNewOption, () => SelectedProduct != null);
+        EditOptionCommand = new RelayCommand<Opcion>(PrepareForEditOption);
+        SaveOptionCommand = new AsyncRelayCommand(SaveOptionAsync, () => !string.IsNullOrWhiteSpace(OptionName));
+        CancelEditCommand = new RelayCommand(CancelEdit);
+        DeleteOptionCommand = new AsyncRelayCommand<Opcion>(DeleteOptionAsync);
 
         _ = LoadCommand.ExecuteAsync(null);
     }
@@ -79,7 +82,13 @@ public class ProductViewModel : ObservableObject
     public Producto? SelectedProduct
     {
         get => _selectedProduct;
-        set => SetProperty(ref _selectedProduct, value);
+        set
+        {
+            if (SetProperty(ref _selectedProduct, value))
+            {
+                AddNewOptionCommand.NotifyCanExecuteChanged();
+            }
+        }
     }
 
     private bool _isPopupVisible;
@@ -89,10 +98,34 @@ public class ProductViewModel : ObservableObject
         set => SetProperty(ref _isPopupVisible, value);
     }
 
+    private Opcion? _editingOption;
+    public Opcion? EditingOption { get => _editingOption; private set => SetProperty(ref _editingOption, value); }
+
+    private string _optionName = string.Empty;
+    public string OptionName
+    {
+        get => _optionName;
+        set
+        {
+            if (SetProperty(ref _optionName, value))
+            {
+                SaveOptionCommand.NotifyCanExecuteChanged();
+            }
+        }
+    }
+
+    private bool _isEditingFormVisible;
+    public bool IsEditingFormVisible { get => _isEditingFormVisible; set => SetProperty(ref _isEditingFormVisible, value); }
+
     public IAsyncRelayCommand LoadCommand { get; }
     public IRelayCommand ClearFiltersCommand { get; }
     public IRelayCommand<Producto> ShowDetailsCommand { get; }
     public IRelayCommand HideDetailsCommand { get; }
+    public IRelayCommand AddNewOptionCommand { get; }
+    public IRelayCommand<Opcion> EditOptionCommand { get; }
+    public IAsyncRelayCommand SaveOptionCommand { get; }
+    public IRelayCommand CancelEditCommand { get; }
+    public IAsyncRelayCommand<Opcion> DeleteOptionCommand { get; }
 
 
     private void ClearFilters()
@@ -106,7 +139,8 @@ public class ProductViewModel : ObservableObject
 
     private void ScheduleReload()
     {
-        _reloadCts?.Cancel(); 
+        _reloadCts?.Cancel();
+        _reloadCts?.Dispose();
         _reloadCts = new CancellationTokenSource();
         _ = ReloadAfterDelayAsync(_reloadCts.Token);
     }
@@ -115,7 +149,7 @@ public class ProductViewModel : ObservableObject
     {
         try
         {
-            await Task.Delay(300, token); 
+            await Task.Delay(300, token);
             await LoadAsync();
         }
         catch (TaskCanceledException)
@@ -163,6 +197,78 @@ public class ProductViewModel : ObservableObject
     private void HideProductDetails()
     {
         IsPopupVisible = false;
+        CancelEdit();
         SelectedProduct = null;
+    }
+
+    private void PrepareForNewOption()
+    {
+        EditingOption = new Opcion { Nombre = "", CodigoProducto = SelectedProduct!.Codigo };
+        OptionName = "";
+        IsEditingFormVisible = true;
+    }
+
+    private void PrepareForEditOption(Opcion? option)
+    {
+        if (option == null) return;
+        EditingOption = option;
+        OptionName = option.Nombre;
+        IsEditingFormVisible = true;
+    }
+
+    private async Task SaveOptionAsync()
+    {
+        if (EditingOption == null || SelectedProduct == null) return;
+
+        EditingOption.Nombre = OptionName;
+
+        try
+        {
+            if (EditingOption.IdOpcion == 0)
+            {
+                var newOption = await _optionService.AddOptionAsync(EditingOption);
+                SelectedProduct.Opciones.Add(newOption);
+            }
+            else
+            {
+                var updatedOption = await _optionService.UpdateOptionAsync(EditingOption);
+                
+                var oldOption = SelectedProduct.Opciones.FirstOrDefault(o => o.IdOpcion == updatedOption.IdOpcion);
+                if (oldOption != null)
+                {
+                    SelectedProduct.Opciones.Remove(oldOption);
+                    SelectedProduct.Opciones.Add(updatedOption);
+                }
+            }
+            CancelEdit();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al guardar la opción.");
+            Error = "No se guardar la opción.";
+        }
+    }
+
+    private void CancelEdit()
+    {
+        IsEditingFormVisible = false;
+        EditingOption = null;
+        OptionName = "";
+    }
+
+    private async Task DeleteOptionAsync(Opcion? option)
+    {
+        if (option == null || SelectedProduct == null) return;
+
+        try
+        {
+            await _optionService.DeleteOptionAsync(option.IdOpcion);
+            SelectedProduct.Opciones.Remove(option);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al eliminar la opción.");
+            Error = "No se pudo eliminar la opción. Es posible que esté en uso.";
+        }
     }
 }

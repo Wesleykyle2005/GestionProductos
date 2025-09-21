@@ -295,7 +295,8 @@
 
                         <Button Content="Iniciar Sesión" 
                               Style="{StaticResource PrimaryButton}"
-                              Click="Login_Click"/>
+                              Command="{Binding LoginCommand}"
+                              CommandParameter="{Binding ElementName=LoginPasswordBox}"/>
                     </StackPanel>
                 </Border>
 
@@ -354,7 +355,8 @@
 
                         <Button Content="Crear Cuenta" 
                               Style="{StaticResource PrimaryButton}"
-                              Click="Register_Click"/>
+                              Command="{Binding RegisterCommand}"
+                              CommandParameter="{Binding ElementName=SignupPasswordBox}"/>
                     </StackPanel>
                 </Border>
 

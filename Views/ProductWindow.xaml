@@ -218,7 +218,8 @@
                          MaxWidth="400"
                          HorizontalAlignment="Left"
                          Tag="Buscar productos..."
-                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"/>
+                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                         MaxLength="100"/>
 
                 <!-- FilterComboBox enlazado al ViewModel -->
                 <ComboBox Grid.Column="1"
@@ -336,10 +337,17 @@
                     <!-- Header del Popup -->
                     <Border Grid.Row="0" Background="{StaticResource PrimaryBlue}" CornerRadius="16,16,0,0">
                         <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
                             <StackPanel Margin="24,20">
                                 <TextBlock Text="DETALLES DEL PRODUCTO" FontSize="12" FontWeight="SemiBold" Foreground="White" Opacity="0.9"/>
                                 <TextBlock Text="{Binding Nombre}" FontSize="24" FontWeight="Bold" Foreground="White" Margin="0,4,0,0"/>
                             </StackPanel>
+                            <!-- Botón para cerrar el popup -->
+                            <Button Grid.Column="1" Content="✕" FontSize="16" FontWeight="Bold" Foreground="White" Background="Transparent" BorderThickness="0" Width="48" Height="48" VerticalAlignment="Top" HorizontalAlignment="Right" Cursor="Hand"
+                                    Command="{Binding DataContext.HideDetailsCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
                         </Grid>
                     </Border>
 
@@ -384,29 +392,67 @@
                                 </Grid>
                             </Border>
                             <Border Height="1" Background="{StaticResource DividerGray}" Margin="0,20"/>
+
                             <!-- Opciones del Producto -->
-                            <TextBlock Text="OPCIONES DISPONIBLES" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextDark}" Margin="0,0,0,16"/>
+                            <Grid Margin="0,0,0,16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="OPCIONES DISPONIBLES" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextDark}" VerticalAlignment="Center"/>
+                                <!-- Botón para añadir nueva opción -->
+                                <Button Grid.Column="1" Content="+ Añadir Nueva" Style="{StaticResource CTAButtonStyle}" Padding="10,4" FontSize="11"
+                                        Command="{Binding DataContext.AddNewOptionCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                            </Grid>
+
+                            <!-- Lista de Opciones con botones de acción -->
                             <ItemsControl ItemsSource="{Binding Opciones}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate DataType="{x:Type models:Opcion}">
-                                        <Border Background="White" BorderBrush="{StaticResource BorderGray}" BorderThickness="1" CornerRadius="8" Padding="16" Margin="0,0,0,8">
+                                        <Border Background="White" BorderBrush="{StaticResource BorderGray}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,8">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="Auto"/>
                                                     <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
-                                                <Border Grid.Column="0" Width="40" Height="40" Background="{StaticResource PrimaryBlue}" CornerRadius="8" Margin="0,0,0,0">
-                                                    <TextBlock Text="{Binding Nombre, Converter={StaticResource FirstLetterConverter}}" FontSize="18" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                <Border Grid.Column="0" Width="36" Height="36" Background="{StaticResource PrimaryBlue}" CornerRadius="6" Margin="0,0,12,0">
+                                                    <TextBlock Text="{Binding Nombre, Converter={StaticResource FirstLetterConverter}}" FontSize="16" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                 </Border>
-                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Nombre}" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextDark}"/>
-                                                    <TextBlock Text="{Binding Descripcion}" FontSize="12" Foreground="{StaticResource TextGray}" Margin="0,2,0,0"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding Nombre}" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextDark}" VerticalAlignment="Center"/>
+                                                <!-- Botones de Editar y Eliminar -->
+                                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <Button Content="Editar" Background="Transparent" Foreground="{StaticResource PrimaryBlue}" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold"
+                                                            Command="{Binding DataContext.EditOptionCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}"/>
+                                                    <Button Content="Eliminar" Background="Transparent" Foreground="{StaticResource ErrorRed}" BorderThickness="0" Cursor="Hand" Margin="8,0,0,0" FontWeight="SemiBold"
+                                                            Command="{Binding DataContext.DeleteOptionCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}"/>
                                                 </StackPanel>
                                             </Grid>
                                         </Border>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
+
+                            <!-- FORMULARIO DE EDICIÓN/ADICIÓN -->
+                            <Border Background="{StaticResource BackgroundWhite}" BorderBrush="{StaticResource PrimaryBlue}" BorderThickness="1.5" CornerRadius="8" Padding="16" Margin="0,16,0,0"
+                                    Visibility="{Binding DataContext.IsEditingFormVisible, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <StackPanel>
+                                    <TextBlock Text="Nombre de la opción" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextGray}" Margin="0,0,0,4"/>
+                                    <TextBox Text="{Binding DataContext.OptionName, RelativeSource={RelativeSource AncestorType=Window}, UpdateSourceTrigger=PropertyChanged}" 
+                                             Style="{StaticResource SearchBoxStyle}"
+                                             MaxLength="50"/>
+
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+                                        <Button Content="Cancelar" Background="Transparent" Foreground="{StaticResource TextGray}" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold"
+                                                Command="{Binding DataContext.CancelEditCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                                        <Button Content="Guardar" Style="{StaticResource CTAButtonStyle}" Margin="12,0,0,0"
+                                                Command="{Binding DataContext.SaveOptionCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
                         </StackPanel>
                     </ScrollViewer>
 

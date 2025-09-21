@@ -17,7 +17,7 @@ public class Usuario
     public string? Apellido { get; set; }
 
     [Required]
-    public required byte[] ContrasenaHash { get; set; }
+    public required string ContrasenaHash { get; set; }
 
     [Required]
     [StringLength(100)]

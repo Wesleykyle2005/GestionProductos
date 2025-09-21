@@ -27,21 +27,4 @@ public partial class AuthWindow : Window, IRecipient<LoginSuccessMessage>
             this.Close();
         });
     }
-
-
-    private void Login_Click(object sender, RoutedEventArgs e)
-    {
-        if (DataContext is AuthViewModel vm)
-        {
-            vm.LoginCommand.Execute(LoginPasswordBox.Password);
-        }
-    }
-
-    private void Register_Click(object sender, RoutedEventArgs e)
-    {
-        if (DataContext is AuthViewModel vm)
-        {
-            vm.RegisterCommand.Execute(SignupPasswordBox.Password);
-        }
-    }
 }

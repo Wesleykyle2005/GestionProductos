@@ -5,6 +5,7 @@ using GestionProductos.Common;
 using GestionProductos.Models;
 using GestionProductos.Services;
 using Microsoft.Extensions.Logging;
+using System.Windows.Controls;
 
 namespace GestionProductos.ViewModels;
 
@@ -17,8 +18,8 @@ public class AuthViewModel : ObservableObject
         _userService = userService;
         _logger = logger;
 
-        LoginCommand = new AsyncRelayCommand<string>(DoLoginAsync);
-        RegisterCommand = new RelayCommand<string>(DoRegister);
+        LoginCommand = new AsyncRelayCommand<object>(DoLoginAsync);
+        RegisterCommand = new RelayCommand<object>(DoRegister);
         ToggleModeCommand = new RelayCommand(() => IsLoginMode = !IsLoginMode);
     }
 
@@ -42,12 +43,16 @@ public class AuthViewModel : ObservableObject
     public Usuario? CurrentUser { get => _currentUser; set => SetProperty(ref _currentUser, value); }
     private Usuario? _currentUser;
 
-    public IAsyncRelayCommand<string> LoginCommand { get; }
-    public IRelayCommand<string> RegisterCommand { get; }
+    public IAsyncRelayCommand<object> LoginCommand { get; }
+    public IRelayCommand<object> RegisterCommand { get; }
     public IRelayCommand ToggleModeCommand { get; }
 
-    private void DoRegister(string password)
+    private void DoRegister(object? parameter)
     {
+        if (parameter is not PasswordBox passwordBox) return;
+
+        string password = passwordBox.Password;
+
         Error = null;
         CurrentUser = null;
 
@@ -71,8 +76,12 @@ public class AuthViewModel : ObservableObject
             Error = "No se pudo completar el registro. Inténtalo más tarde.";
         }
     }
-    private async Task DoLoginAsync(string? password)
+    private async Task DoLoginAsync(object? parameter)
     {
+        if (parameter is not PasswordBox passwordBox) return;
+
+        string password = passwordBox.Password;
+
         if (string.IsNullOrWhiteSpace(Correo) || string.IsNullOrWhiteSpace(password))
         {
             Error = "El correo y la contraseña son obligatorios.";
