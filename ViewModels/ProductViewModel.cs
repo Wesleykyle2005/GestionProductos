@@ -33,6 +33,9 @@ public class ProductViewModel : ObservableObject
 
         LoadCommand = new AsyncRelayCommand(LoadAsync);
         ClearFiltersCommand = new RelayCommand(ClearFilters);
+        ShowDetailsCommand = new RelayCommand<Producto>(ShowProductDetails);
+        HideDetailsCommand = new RelayCommand(HideProductDetails);
+
         _ = LoadCommand.ExecuteAsync(null);
     }
 
@@ -72,8 +75,25 @@ public class ProductViewModel : ObservableObject
     public string? Error { get => _error; set => SetProperty(ref _error, value); }
     private string? _error;
 
+    private Producto? _selectedProduct;
+    public Producto? SelectedProduct
+    {
+        get => _selectedProduct;
+        set => SetProperty(ref _selectedProduct, value);
+    }
+
+    private bool _isPopupVisible;
+    public bool IsPopupVisible
+    {
+        get => _isPopupVisible;
+        set => SetProperty(ref _isPopupVisible, value);
+    }
+
     public IAsyncRelayCommand LoadCommand { get; }
     public IRelayCommand ClearFiltersCommand { get; }
+    public IRelayCommand<Producto> ShowDetailsCommand { get; }
+    public IRelayCommand HideDetailsCommand { get; }
+
 
     private void ClearFilters()
     {
@@ -131,5 +151,18 @@ public class ProductViewModel : ObservableObject
         {
             IsBusy = false;
         }
+    }
+
+    private void ShowProductDetails(Producto? product)
+    {
+        if (product == null) return;
+        SelectedProduct = product;
+        IsPopupVisible = true;
+    }
+
+    private void HideProductDetails()
+    {
+        IsPopupVisible = false;
+        SelectedProduct = null;
     }
 }

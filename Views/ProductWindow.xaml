@@ -4,7 +4,8 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GestionProductos.Views"
-        xmlns:models="clr-namespace:GestionProductos.Models"  
+        xmlns:models="clr-namespace:GestionProductos.Models"
+        xmlns:common="clr-namespace:GestionProductos.Common"
         mc:Ignorable="d"
         Title="ProductWindow" Height="450" Width="800">
 
@@ -21,6 +22,9 @@
         <SolidColorBrush x:Key="SuccessGreen" Color="#10B981"/>
         <SolidColorBrush x:Key="ErrorRed" Color="#FF4444"/>
         <SolidColorBrush x:Key="DividerGray" Color="#adaeb0"/>
+
+        <common:BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <common:FirstLetterConverter x:Key="FirstLetterConverter"/>
 
         <!-- Estilo para SearchBar -->
         <Style x:Key="SearchBoxStyle" TargetType="TextBox">
@@ -194,18 +198,19 @@
     </Window.Resources>
 
     <Grid Background="{StaticResource BackgroundWhite}">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-        <!-- Header con Barra de Búsqueda y Filtros -->
-        <Border Grid.Row="0" Background="{StaticResource CardWhite}" BorderBrush="{StaticResource BorderGray}" BorderThickness="0,0,0,1">
-            <Grid Margin="20,15">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="2*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+            <!-- Header con Barra de Búsqueda y Filtros -->
+            <Border Grid.Row="0" Background="{StaticResource CardWhite}" BorderBrush="{StaticResource BorderGray}" BorderThickness="0,0,0,1">
+                <Grid Margin="20,15">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
                 <!-- SearchBar enlazada al ViewModel -->
                 <TextBox Grid.Column="0"
@@ -223,97 +228,195 @@
                           ItemsSource="{Binding StatusList}"
                           SelectedItem="{Binding SelectedStatus}"
                           DisplayMemberPath="Key"/>
-            </Grid>
-        </Border>
+                </Grid>
+            </Border>
 
-        <!-- Contenedor de Productos Dinámico -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="20">
-            <ItemsControl ItemsSource="{Binding Products}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <WrapPanel Orientation="Horizontal" HorizontalAlignment="Left"/>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
+            <!-- Contenedor de Productos Dinámico -->
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="20">
+                <ItemsControl ItemsSource="{Binding Products}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal" HorizontalAlignment="Left"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
 
                 <!-- Plantilla para cada tarjeta de producto -->
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate DataType="{x:Type models:Producto}">
-                        <Border Width="240" Margin="10" Background="{StaticResource CardWhite}" BorderBrush="{StaticResource BorderGray}" BorderThickness="1" CornerRadius="12">
-                            <Border.Effect>
-                                <DropShadowEffect Color="#000000" BlurRadius="8" ShadowDepth="2" Opacity="0.08"/>
-                            </Border.Effect>
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type models:Producto}">
+                            <Border Width="240" Margin="10" Background="{StaticResource CardWhite}" BorderBrush="{StaticResource BorderGray}" BorderThickness="1" CornerRadius="12">
+                                <Border.Effect>
+                                    <DropShadowEffect Color="#000000" BlurRadius="8" ShadowDepth="2" Opacity="0.08"/>
+                                </Border.Effect>
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
 
                                 <!-- Header del Producto -->
-                                <Border x:Name="HeaderBorder" Grid.Row="0" Background="{StaticResource PrimaryBlue}" CornerRadius="12,12,0,0" Padding="15,12">
-                                    <StackPanel>
-                                        <TextBlock Text="{Binding Nombre}" FontSize="16" FontWeight="Bold" Foreground="White"/>
-                                        <TextBlock Text="{Binding Codigo, StringFormat='Código: {0}'}" FontSize="11" Foreground="White" Opacity="0.9" Margin="0,2,0,0"/>
-                                    </StackPanel>
-                                </Border>
+                                    <Border x:Name="HeaderBorder" Grid.Row="0" Background="{StaticResource PrimaryBlue}" CornerRadius="12,12,0,0" Padding="15,12">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Nombre}" FontSize="16" FontWeight="Bold" Foreground="White"/>
+                                            <TextBlock Text="{Binding Codigo, StringFormat='Código: {0}'}" FontSize="11" Foreground="White" Opacity="0.9" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                    </Border>
 
                                 <!-- Información -->
-                                <StackPanel Grid.Row="1" Margin="15,12">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition/>
-                                            <ColumnDefinition/>
-                                        </Grid.ColumnDefinitions>
-                                        <StackPanel Grid.Column="0" HorizontalAlignment="Left">
-                                            <TextBlock Text="Existencia" FontSize="11" Foreground="{StaticResource TextGray}"/>
-                                            <TextBlock Text="{Binding Existencia}" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource TextDark}"/>
-                                        </StackPanel>
-                                        <StackPanel Grid.Column="1" HorizontalAlignment="Right">
-                                            <TextBlock Text="Estado" FontSize="11" Foreground="{StaticResource TextGray}"/>
-                                            <Border x:Name="StatusBadge" Background="#10B98120" CornerRadius="4" Padding="8,2" Margin="0,2,0,0">
-                                                <TextBlock x:Name="StatusText" Text="Activo" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource SuccessGreen}"/>
-                                            </Border>
-                                        </StackPanel>
-                                    </Grid>
-                                    <TextBlock Text="{Binding NombreProveedor, StringFormat='Proveedor: {0}', TargetNullValue='Proveedor: No especificado'}" FontSize="12" Foreground="{StaticResource TextGray}" Margin="0,8,0,0"/>
-                                </StackPanel>
-
-                                <Border Grid.Row="2" Height="1" Background="{StaticResource DividerGray}" Margin="15,0"/>
-
-                                <!-- Opciones del Producto  -->
-                                <StackPanel Grid.Row="3" Margin="15,12">
-                                    <TextBlock Text="Opciones disponibles:" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextGray}" Margin="0,0,0,8"/>
-                                    <ItemsControl ItemsSource="{Binding Opciones}">
-                                        <ItemsControl.ItemsPanel>
-                                            <ItemsPanelTemplate>
-                                                <WrapPanel/>
-                                            </ItemsPanelTemplate>
-                                        </ItemsControl.ItemsPanel>
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate DataType="{x:Type models:Opcion}">
-                                                <Border Background="#F0F4FF" CornerRadius="4" Padding="8,4" Margin="0,0,6,6">
-                                                    <TextBlock Text="{Binding Nombre}" FontSize="11" Foreground="{StaticResource PrimaryBlue}"/>
+                                    <StackPanel Grid.Row="1" Margin="15,12">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition/>
+                                                <ColumnDefinition/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0" HorizontalAlignment="Left">
+                                                <TextBlock Text="Existencia" FontSize="11" Foreground="{StaticResource TextGray}"/>
+                                                <TextBlock Text="{Binding Existencia}" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource TextDark}"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+                                                <TextBlock Text="Estado" FontSize="11" Foreground="{StaticResource TextGray}"/>
+                                                <Border x:Name="StatusBadge" Background="#10B98120" CornerRadius="4" Padding="8,2" Margin="0,2,0,0">
+                                                    <TextBlock x:Name="StatusText" Text="Activo" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource SuccessGreen}"/>
                                                 </Border>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                    <Button Content="Ver Opciones" Style="{StaticResource CTAButtonStyle}" Margin="0,12,0,0"/>
-                                </StackPanel>
-                            </Grid>
-                        </Border>
+                                            </StackPanel>
+                                        </Grid>
+                                        <TextBlock Text="{Binding NombreProveedor, StringFormat='Proveedor: {0}', TargetNullValue='Proveedor: No especificado'}" FontSize="12" Foreground="{StaticResource TextGray}" Margin="0,8,0,0"/>
+                                    </StackPanel>
+
+                                    <Border Grid.Row="2" Height="1" Background="{StaticResource DividerGray}" Margin="15,0"/>
+
+                                    <!-- Botón para abrir el popup -->
+                                    <StackPanel Grid.Row="3" Margin="15,12">
+                                        <Button Content="Ver Opciones" 
+                                                Style="{StaticResource CTAButtonStyle}" 
+                                                Margin="0,12,0,0"
+                                                Command="{Binding DataContext.ShowDetailsCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                CommandParameter="{Binding}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
                         <!-- Disparadores para cambiar estilos según el estado del producto -->
-                        <DataTemplate.Triggers>
-                            <DataTrigger Binding="{Binding Estado}" Value="False">
-                                <Setter TargetName="HeaderBorder" Property="Background" Value="{StaticResource TextGray}"/>
-                                <Setter TargetName="StatusBadge" Property="Background" Value="#FEE2E2"/>
-                                <Setter TargetName="StatusText" Property="Text" Value="Inactivo"/>
-                                <Setter TargetName="StatusText" Property="Foreground" Value="{StaticResource ErrorRed}"/>
-                            </DataTrigger>
-                        </DataTemplate.Triggers>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </ScrollViewer>
+                            <DataTemplate.Triggers>
+                                <DataTrigger Binding="{Binding Estado}" Value="False">
+                                    <Setter TargetName="HeaderBorder" Property="Background" Value="{StaticResource TextGray}"/>
+                                    <Setter TargetName="StatusBadge" Property="Background" Value="#FEE2E2"/>
+                                    <Setter TargetName="StatusText" Property="Text" Value="Inactivo"/>
+                                    <Setter TargetName="StatusText" Property="Foreground" Value="{StaticResource ErrorRed}"/>
+                                </DataTrigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Grid>
+
+        <Grid Background="#80000000"
+              Visibility="{Binding IsPopupVisible, Converter={StaticResource BoolToVisibilityConverter}}">
+
+            <Border Background="{StaticResource CardWhite}"
+                    CornerRadius="16"
+                    MaxWidth="500"
+                    MaxHeight="600"
+                    Margin="40"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center"
+                    DataContext="{Binding SelectedProduct}">
+                <Border.Effect>
+                    <DropShadowEffect Color="#000000" BlurRadius="30" ShadowDepth="10" Opacity="0.2"/>
+                </Border.Effect>
+
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header del Popup -->
+                    <Border Grid.Row="0" Background="{StaticResource PrimaryBlue}" CornerRadius="16,16,0,0">
+                        <Grid>
+                            <StackPanel Margin="24,20">
+                                <TextBlock Text="DETALLES DEL PRODUCTO" FontSize="12" FontWeight="SemiBold" Foreground="White" Opacity="0.9"/>
+                                <TextBlock Text="{Binding Nombre}" FontSize="24" FontWeight="Bold" Foreground="White" Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Contenido del Popup -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="24">
+                        <StackPanel>
+                            <!-- Información General -->
+                            <Border Background="{StaticResource BackgroundWhite}" CornerRadius="8" Padding="16">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition/>
+                                        <ColumnDefinition/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,0,16">
+                                        <TextBlock Text="CÓDIGO" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextGray}" Margin="0,0,0,4"/>
+                                        <TextBlock Text="{Binding Codigo}" FontSize="20" FontWeight="Bold" Foreground="{StaticResource TextDark}"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right" Margin="0,0,0,16">
+                                        <TextBlock Text="ESTADO" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextGray}" Margin="0,0,0,4" HorizontalAlignment="Right"/>
+                                        <Border Background="#10B98120" CornerRadius="6" Padding="12,6">
+                                            <TextBlock Text="Activo" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource SuccessGreen}"/>
+                                        </Border>
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,0,16">
+                                        <TextBlock Text="EXISTENCIA" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextGray}" Margin="0,0,0,4"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Existencia}" FontSize="28" FontWeight="Bold" Foreground="{StaticResource PrimaryBlue}"/>
+                                            <TextBlock Text=" unidades" FontSize="14" VerticalAlignment="Bottom" Margin="4,0,0,4" Foreground="{StaticResource TextGray}"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2">
+                                        <TextBlock Text="PROVEEDOR" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextGray}" Margin="0,0,0,4"/>
+                                        <Border Background="White" BorderBrush="{StaticResource BorderGray}" BorderThickness="1" CornerRadius="6" Padding="12,10">
+                                            <TextBlock Text="{Binding NombreProveedor}" FontSize="14" Foreground="{StaticResource TextDark}"/>
+                                        </Border>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                            <Border Height="1" Background="{StaticResource DividerGray}" Margin="0,20"/>
+                            <!-- Opciones del Producto -->
+                            <TextBlock Text="OPCIONES DISPONIBLES" FontSize="12" FontWeight="Bold" Foreground="{StaticResource TextDark}" Margin="0,0,0,16"/>
+                            <ItemsControl ItemsSource="{Binding Opciones}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type models:Opcion}">
+                                        <Border Background="White" BorderBrush="{StaticResource BorderGray}" BorderThickness="1" CornerRadius="8" Padding="16" Margin="0,0,0,8">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Border Grid.Column="0" Width="40" Height="40" Background="{StaticResource PrimaryBlue}" CornerRadius="8" Margin="0,0,0,0">
+                                                    <TextBlock Text="{Binding Nombre, Converter={StaticResource FirstLetterConverter}}" FontSize="18" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Nombre}" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextDark}"/>
+                                                    <TextBlock Text="{Binding Descripcion}" FontSize="12" Foreground="{StaticResource TextGray}" Margin="0,2,0,0"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- Footer del Popup -->
+                    <Border Grid.Row="2" Background="{StaticResource BackgroundWhite}" BorderBrush="{StaticResource BorderGray}" BorderThickness="0,1,0,0" CornerRadius="0,0,16,16" Padding="24,16">
+                        <Button Content="Cerrar" Style="{StaticResource CTAButtonStyle}" Padding="20,8" HorizontalAlignment="Right"
+                                Command="{Binding DataContext.HideDetailsCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
     </Grid>
 </Window>
