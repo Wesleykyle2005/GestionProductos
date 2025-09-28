@@ -228,7 +228,7 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <!-- Logo de la aplicación -->
+                <!-- Logo central -->
                 <Border Grid.Row="0" 
                         Width="60" 
                         Height="60" 
@@ -295,7 +295,8 @@
 
                         <Button Content="Iniciar Sesión" 
                               Style="{StaticResource PrimaryButton}"
-                              Click="Login_Click"/>
+                              Command="{Binding LoginCommand}"
+                              CommandParameter="{Binding ElementName=LoginPasswordBox}"/>
                     </StackPanel>
                 </Border>
 
@@ -303,7 +304,7 @@
                 <Border Grid.Row="2" 
                         Background="{StaticResource CardWhite}"
                         CornerRadius="12"
-                        Padding="1">
+                        Padding="5">
                     <Border.Style>
                         <Style TargetType="Border">
                             <Setter Property="Visibility" Value="Collapsed"/>
@@ -338,20 +339,24 @@
                                Margin="0,0,0,16"/>
 
                         <TextBlock Text="Correo electrónico" Style="{StaticResource LabelStyle}"/>
+                        <TextBlock Text="Ejemplo(Juan@gmail.com)" Style="{StaticResource LabelStyle}"/>
                         <TextBox Text="{Binding Correo, UpdateSourceTrigger=PropertyChanged}" 
                                Margin="0,0,0,16"/>
 
                         <TextBlock Text="Teléfono" Style="{StaticResource LabelStyle}"/>
+                        <TextBlock Text="Ejemplo(1234-1234)" Style="{StaticResource LabelStyle}"/>
                         <TextBox Text="{Binding Telefono, UpdateSourceTrigger=PropertyChanged}" 
-                               Margin="0,0,0,16"/>
+                               Margin="0,0,0,16" MaxLength="9" />
 
                         <TextBlock Text="Contraseña" Style="{StaticResource LabelStyle}"/>
+                        <TextBlock Text="Al menos 8 caracteres" Style="{StaticResource LabelStyle}"/>
                         <PasswordBox x:Name="SignupPasswordBox" 
                                    Margin="0,0,0,24"/>
 
                         <Button Content="Crear Cuenta" 
                               Style="{StaticResource PrimaryButton}"
-                              Click="Register_Click"/>
+                              Command="{Binding RegisterCommand}"
+                              CommandParameter="{Binding ElementName=SignupPasswordBox}"/>
                     </StackPanel>
                 </Border>
 

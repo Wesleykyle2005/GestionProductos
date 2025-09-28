@@ -17,12 +17,14 @@ public class Usuario
     public string? Apellido { get; set; }
 
     [Required]
-    public required byte[] ContrasenaHash { get; set; }
+    public required string ContrasenaHash { get; set; }
 
     [Required]
     [StringLength(100)]
+    [RegularExpression(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", ErrorMessage = "El correo no tiene un formato válido")]
     public required string Correo { get; set; }
     [Required]
+    [RegularExpression(@"^\d{8}$", ErrorMessage = "El teléfono debe tener 8 dígitos")]
     public required string Telefono { get; set; }
 
     public DateTime FechaCreacion { get; set; } = DateTime.Now;
